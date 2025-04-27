@@ -43,8 +43,6 @@ All table names are prefixed with `nw_` to avoid conflicts with existing tables 
 
 ## Northwind Example Queries
 
-# northwind data
-
 https://github.com/neo4j-contrib/northwind-neo4j/tree/master/data
 
 Use [create_northwind_tables.py](create_northwind_tables.py) to import the data into duckdb tables
