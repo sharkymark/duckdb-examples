@@ -1,0 +1,82 @@
+import duckdb
+import subprocess
+import os
+import argparse  # Import the argparse module
+
+# Set up argument parsing
+parser = argparse.ArgumentParser(description="Create Northwind tables in DuckDB.")
+parser.add_argument("--db", default=":memory:", help="Path to the DuckDB database file.  Defaults to in-memory.")
+args = parser.parse_args()
+
+# Use the database file from the argument
+db_path = args.db
+try:
+    # Try to connect to the provided database path to check if it is a valid path.
+    con = duckdb.connect(database=db_path, read_only=False)
+    print(f"Using database: {db_path}")
+except Exception as e:
+    print(f"Error connecting to {db_path}: {e}")
+    print("Using an in-memory database instead.")
+    db_path = ":memory:"
+    con = duckdb.connect(database=db_path, read_only=False) # connect to memory if file doesn't work.
+
+
+# Base URL for the Northwind CSV files
+base_url = "https://raw.githubusercontent.com/neo4j-contrib/northwind-neo4j/master/data/"
+
+# List of CSV files (table names)
+csv_files = [
+    "categories.csv",
+    "customers.csv",
+    "employees.csv",
+    "order-details.csv",
+    "orders.csv",
+    "products.csv",
+    "shippers.csv",
+    "suppliers.csv"
+]
+
+def create_table_from_csv(table_name, csv_url):
+    """
+    Creates or replaces a table in DuckDB from a CSV file URL.
+
+    Args:
+        table_name (str): The name of the table to create.
+        csv_url (str): The URL of the CSV file.
+    """
+    try:
+        # Use a WITH STATEMENT for table creation.
+        con.execute(f"""
+            CREATE OR REPLACE TABLE "nw_{table_name}" AS
+            SELECT * FROM read_csv_auto('{csv_url}', HEADER=TRUE)
+        """)
+        print(f"Table '{table_name}' created or replaced successfully from '{csv_url}'")
+        con.commit()  # Commit the transaction
+    except Exception as e:
+        print(f"Error creating or replacing table 'nw_{table_name}' from '{csv_url}': {e}")
+
+# Iterate through the CSV files and create tables
+for csv_file in csv_files:
+    table_name = os.path.splitext(csv_file)[0]  # Remove the ".csv" extension
+    table_name = table_name.replace('-', '_')  # Replace hyphens with underscores
+    csv_url = base_url + csv_file
+    create_table_from_csv(table_name, csv_url)
+
+# Verify the tables have been created (optional)
+print("\nTables in the DuckDB database:")
+# tables = con.execute("SHOW TABLES LIKE 'nw_'").fetchall()
+tables = con.execute("SELECT table_name FROM information_schema.tables WHERE table_name LIKE 'nw_%'").fetchall()
+for table in tables:
+    print(table[0])
+
+# Example query (optional)
+print("\nExample query: Selecting the first 5 rows from the 'Customers' table:")
+try:
+    result = con.execute("SELECT * FROM nw_customers LIMIT 5").fetchall()
+    for row in result:
+        print(row)
+except Exception as e:
+    print(f"Error running example query: {e}")
+
+# Close the connection
+con.close()
