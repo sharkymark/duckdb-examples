@@ -1,2 +1,4 @@
 *.duckdb
 mydatabase*
+*.csv
+.ipynb_checkpoints/
