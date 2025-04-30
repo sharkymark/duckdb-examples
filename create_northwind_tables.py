@@ -32,12 +32,15 @@ base_url = "https://raw.githubusercontent.com/neo4j-contrib/northwind-neo4j/mast
 csv_files = [
     "categories.csv",
     "customers.csv",
+    "employee-territories.csv",
     "employees.csv",
     "order-details.csv",
     "orders.csv",
     "products.csv",
     "shippers.csv",
-    "suppliers.csv"
+    "suppliers.csv",
+    "territories.csv",
+    "regions.csv"
 ]
 
 def clean_csv(url, replace_char=' '):
